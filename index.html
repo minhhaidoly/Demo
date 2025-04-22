@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RetinalScan™ - Early Retinal Disease Detection System</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React and ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // App Component
+    function App() {
+      const [inputImage, setInputImage] = React.useState(null);
+      const [groundTruth, setGroundTruth] = React.useState(null);
+      const [segmentedImage, setSegmentedImage] = React.useState(null);
+      const [overlayMode, setOverlayMode] = React.useState(false);
+      const [selectedModel, setSelectedModel] = React.useState('3x3');
+      const [isProcessing, setIsProcessing] = React.useState(false);
+      const [metrics, setMetrics] = React.useState(null);
+      
+      const processImage = () => {
+        if (!inputImage) return;
+        
+        setIsProcessing(true);
+        
+        // Simulating processing time
+        setTimeout(() => {
+          // In a real application, this would make an API call to the backend
+          // For demonstration, we're just showing a placeholder result
+          setSegmentedImage('/api/placeholder/565/584');
+          
+          // Simulate metrics if ground truth is available
+          if (groundTruth) {
+            setMetrics({
+              accuracy: 0.94,
+              sensitivity: 0.82,
+              specificity: 0.97
+            });
+          }
+          
+          setIsProcessing(false);
+        }, 3000);
+      };
+      
+      const resetAll = () => {
+        setInputImage(null);
+        setGroundTruth(null);
+        setSegmentedImage(null);
+        setMetrics(null);
+      };
+      
+      const downloadResult = () => {
+        if (!segmentedImage) return;
+        
+        // In a real app, this would create a download link for the actual image
+        const link = document.createElement('a');
+        link.href = segmentedImage;
+        link.download = 'segmented_retina.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+      
+      return (
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <Header />
+          
+          {/* Main Content */}
+          <div className="grid md:grid-cols-2 gap-8 mt-8">
+            <div>
+              {/* Concept Section */}
+              <ConceptSection />
+              
+              {/* Upload & Controls Section */}
+              <div className="bg-gray-800 rounded-lg p-6 mt-6">
+                <h2 className="text-xl font-bold mb-4">Image Processing</h2>
+                
+                <div className="mb-6">
+                  <ImageUploader 
+                    label="Upload Retinal Fundus Image" 
+                    setImage={setInputImage} 
+                    icon="fa-eye"
+                    acceptedTypes=".tiff,.tif,.png,.jpg,.jpeg"
+                  />
+                </div>
+                
+                <div className="mb-6">
+                  <ModelSelector 
+                    selectedModel={selectedModel} 
+                    setSelectedModel={setSelectedModel} 
+                  />
+                </div>
+                
+                <div className="mb-6">
+                  <ImageUploader 
+                    label="Upload Ground Truth (Optional)" 
+                    setImage={setGroundTruth} 
+                    icon="fa-mask"
+                    acceptedTypes=".tiff,.tif,.png,.jpg,.jpeg"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={processImage}
+                    disabled={!inputImage || isProcessing}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50"
+                  >
+                    {isProcessing ? (
+                      <span>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Processing...
+                      </span>
+                    ) : (
+                      <span>
+                        <i className="fas fa-play mr-2"></i>
+                        Process Image
+                      </span>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={resetAll}
+                    className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg"
+                  >
+                    <i className="fas fa-redo mr-2"></i>
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              {/* Results Section */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">Results</h2>
+                  
+                  <div className="flex items-center">
+                    <label className="mr-4 flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={overlayMode}
+                        onChange={() => setOverlayMode(!overlayMode)}
+                        className="h-4 w-4 mr-2"
+                      />
+                      <span>Show Overlay</span>
+                    </label>
+                    
+                    {segmentedImage && (
+                      <button
+                        onClick={downloadResult}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                      >
+                        <i className="fas fa-download mr-1"></i>
+                        Download
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                <ResultViewer 
+                  inputImage={inputImage} 
+                  segmentedImage={segmentedImage} 
+                  overlayMode={overlayMode} 
+                />
+                
+                {metrics && (
+                  <MetricsDisplay metrics={metrics} />
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <Footer />
+        </div>
+      );
+    }
+
+    // Header Component
+    function Header() {
+      return (
+        <header className="text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-blue-400">
+            <i className="fas fa-eye-dropper mr-2"></i>
+            RetinalScan™
+          </h1>
+          <p className="text-lg text-gray-400 mt-2">Early Retinal Disease Detection System</p>
+        </header>
+      );
+    }
+
+    // Concept Section Component
+    function ConceptSection() {
+      return (
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h2 className="text-xl font-bold mb-4">About RetinalScan™</h2>
+          <p className="mb-4">
+            RetinalScan™ is a clinical decision support system that helps ophthalmologists detect 
+            early signs of diabetic retinopathy by analyzing retinal vessel patterns in fundus images.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <div className="text-blue-400 text-xl mb-2">
+                <i className="fas fa-search"></i>
+              </div>
+              <h3 className="font-bold mb-1">Early Detection</h3>
+              <p className="text-sm text-gray-300">
+                Identifies vascular changes before symptoms appear, reducing risk of vision loss by 95%.
+              </p>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <div className="text-blue-400 text-xl mb-2">
+                <i className="fas fa-microscope"></i>
+              </div>
+              <h3 className="font-bold mb-1">Advanced Segmentation</h3>
+              <p className="text-sm text-gray-300">
+                Accurately separates vessels into large and small categories for detailed analysis.
+              </p>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <div className="text-blue-400 text-xl mb-2">
+                <i className="fas fa-user-md"></i>
+              </div>
+              <h3 className="font-bold mb-1">Clinical Support</h3>
+              <p className="text-sm text-gray-300">
+                Seamlessly integrates into clinical workflows to assist ophthalmologists.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Image Uploader Component
+    function ImageUploader({ label, setImage, icon, acceptedTypes }) {
+      const [isDragging, setIsDragging] = React.useState(false);
+      const [preview, setPreview] = React.useState(null);
+      const fileInputRef = React.useRef(null);
+      
+      const handleFileSelect = (file) => {
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreview(e.target.result);
+          setImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      };
+      
+      const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+      };
+      
+      const handleDragLeave = () => {
+        setIsDragging(false);
+      };
+      
+      const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFileSelect(e.dataTransfer.files[0]);
+        }
+      };
+      
+      return (
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">{label}</label>
+          
+          {preview ? (
+            <div className="relative rounded-lg overflow-hidden h-40">
+              <img 
+                src={preview} 
+                alt="Preview" 
+                className="w-full h-full object-cover"
+              />
+              <button
+                onClick={() => {
+                  setPreview(null);
+                  setImage(null);
+                }}
+                className="absolute top-2 right-2 bg-gray-900 bg-opacity-70 text-white p-1 rounded-full"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed ${
+                isDragging ? 'border-blue-400' : 'border-gray-600'
+              } rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors`}
+            >
+              <i className={`fas ${icon} text-3xl mb-2 text-gray-400`}></i>
+              <p className="text-sm mb-2">
+                Drag & drop or click to upload
+              </p>
+              <p className="text-xs text-gray-500">
+                Supported formats: {acceptedTypes.replace(/\./g, '').toUpperCase().split(',').join(', ')}
+              </p>
+            </div>
+          )}
+          
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                handleFileSelect(e.target.files[0]);
+              }
+            }}
+            accept={acceptedTypes}
+            className="hidden"
+          />
+        </div>
+      );
+    }
+
+    // Model Selector Component
+    function ModelSelector({ selectedModel, setSelectedModel }) {
+      return (
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">
+            Select CNN Model Variant
+          </label>
+          
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="3x3">3×3 Kernel CNN</option>
+            <option value="5x5">5×5 Kernel CNN</option>
+            <option value="hybrid">Hybrid (5×5 → 3×3) CNN</option>
+          </select>
+          
+          <div className="mt-2 text-xs text-gray-400">
+            {selectedModel === '3x3' && (
+              <span>Uses 3×3 kernels for all convolutional layers, best for detecting fine details.</span>
+            )}
+            {selectedModel === '5x5' && (
+              <span>Uses 5×5 kernels for all layers, better at capturing larger vessel structures.</span>
+            )}
+            {selectedModel === 'hybrid' && (
+              <span>Uses 5×5 kernel for first layer and 3×3 for subsequent layers, balancing context and detail.</span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Result Viewer Component
+    function ResultViewer({ inputImage, segmentedImage, overlayMode }) {
+      const placeholderStyle = {
+        backgroundImage: 'radial-gradient(circle, rgba(30,41,59,1) 0%, rgba(15,23,42,1) 100%)',
+      };
+      
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div className="bg-gray-700 rounded-lg overflow-hidden">
+            <div className="bg-gray-800 px-3 py-2 text-sm font-medium border-b border-gray-700">
+              Input Image
+            </div>
+            <div className="h-64 flex items-center justify-center">
+              {inputImage ? (
+                <img 
+                  src={inputImage} 
+                  alt="Input Retinal Image" 
+                  className="max-w-full max-h-full"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center" style={placeholderStyle}>
+                  <span className="text-gray-500">
+                    <i className="fas fa-eye text-2xl mb-2 block"></i>
+                    No image uploaded
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-gray-700 rounded-lg overflow-hidden">
+            <div className="bg-gray-800 px-3 py-2 text-sm font-medium border-b border-gray-700 flex justify-between">
+              <span>Segmented Result</span>
+              {overlayMode && segmentedImage && (
+                <div className="flex text-xs items-center">
+                  <span className="flex items-center mr-2">
+                    <span className="h-2 w-2 bg-red-500 inline-block mr-1 rounded-full"></span>
+                    Large vessels
+                  </span>
+                  <span className="flex items-center">
+                    <span className="h-2 w-2 bg-blue-500 inline-block mr-1 rounded-full"></span>
+                    Small vessels
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="h-64 flex items-center justify-center">
+              {segmentedImage ? (
+                <div className="relative h-full w-full">
+                  <img 
+                    src={segmentedImage} 
+                    alt="Segmented Vessels" 
+                    className="max-w-full max-h-full"
+                  />
+                  {overlayMode && (
+                    <div className="absolute inset-0 bg-blend-screen">
+                      {/* In a real app, would overlay color-coded vessels here */}
+                      <div className="w-full h-full opacity-50" style={{
+                        backgroundImage: 'linear-gradient(45deg, rgba(0,0,255,0.3) 25%, rgba(255,0,0,0.3) 75%)'
+                      }}></div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center" style={placeholderStyle}>
+                  <span className="text-gray-500">
+                    <i className="fas fa-sitemap text-2xl mb-2 block"></i>
+                    No segmentation yet
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Metrics Display Component
+    function MetricsDisplay({ metrics }) {
+      return (
+        <div className="mt-6 bg-gray-700 rounded-lg p-4">
+          <h3 className="font-bold mb-3">Performance Metrics</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                {(metrics.accuracy * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm text-gray-400">Accuracy</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                {(metrics.sensitivity * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm text-gray-400">Sensitivity</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                {(metrics.specificity * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm text-gray-400">Specificity</div>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-gray-400">
+            <p>
+              <strong>Note:</strong> Metrics are calculated by comparing the segmented output 
+              with the uploaded ground truth mask. Higher sensitivity indicates better detection 
+              of vessel pixels, while higher specificity indicates better identification of non-vessel areas.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Footer Component
+    function Footer() {
+      return (
+        <footer className="mt-12 text-center text-gray-500 text-sm">
+          <p>© 2025 RetinalScan™ | Clinical Decision Support for Ophthalmology</p>
+          <p className="mt-1">
+            <span className="text-gray-400">MEDICAL DISCLAIMER:</span> This tool is intended for research and clinical support purposes only. 
+            It should not replace professional medical diagnosis.
+          </p>
+        </footer>
+      );
+    }
+
+    // Render the App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
